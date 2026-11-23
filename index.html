@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fall &amp; Thanksgiving A–Z</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#281b17;color:#fff3d9;font:clamp(16px,1.65vw,23px) system-ui,sans-serif}
+main{max-width:1500px;margin:auto;padding:2vh 3vw}
+header,footer{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font:700 clamp(29px,4.5vw,65px) Georgia,serif;margin:0}
+p{margin:.6em 0}
+strong{color:#ffd08a}
+#board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:2vh 0}
+label{display:flex;align-items:center;background:#483128;border-radius:7px;overflow:hidden}
+label span{background:#fac16e;color:#281b17;text-align:center;font-weight:800;padding:.38em 0;width:2em;flex:none}
+input{min-width:0;width:100%;color:inherit;background:transparent;border:0;font:inherit;padding:.35em}
+label:focus-within{outline:3px solid #fff3d9}
+label.filled{background:#62482f}
+textarea{width:100%;font:inherit;margin:8px 0}
+button{font:inherit;color:inherit;background:#483128;border:1px solid #c0926f;border-radius:7px;padding:.3em .7em;cursor:pointer}
+@media(max-width:700px){#board{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+<main>
+<header><h1>Fall &amp; Thanksgiving A–Z</h1><button id="full" type="button">Full screen</button></header>
+<p>Find one fall or Thanksgiving answer for <strong>every letter</strong>. Skip a tricky letter and come back to it.</p>
+<p><strong>Halloween, Christmas, and winter answers do not count.</strong> Be ready to explain how your answer fits.</p>
+<p>When you’re done, click <strong>Copy answers</strong> and paste them into your email reply.</p>
+<div id="board" aria-label="Alphabet answer board"></div>
+<footer><strong id="progress" role="status"></strong><div><button id="copy" type="button">Copy answers</button> <button id="clear" type="button">Clear answers</button></div></footer>
+<div id="reply" hidden><label for="replyText">Select and copy your answers</label><textarea id="replyText" rows="8" readonly></textarea></div>
+</main>
+<script>
+const board = document.getElementById('board');
+const progress = document.getElementById('progress');
+const fields = [];
+const reply = document.getElementById('reply');
+const replyText = document.getElementById('replyText');
+
+function showCopyFallback(answers) {
+  reply.hidden = false;
+  replyText.value = answers;
+  replyText.focus();
+  replyText.select();
+}
+
+document.getElementById('copy').onclick = async () => {
+  const answers = ['Fall & Thanksgiving A–Z', ...fields.map(
+    (field, i) => String.fromCharCode(65 + i) + '. ' + field.value.trim()
+  )].join('\n');
+  try {
+    await navigator.clipboard.writeText(answers);
+    reply.hidden = true;
+    progress.textContent = 'Answers copied. Paste them into your email reply.';
+  } catch {
+    showCopyFallback(answers);
+  }
+};
+
+function updateProgress() {
+  let filled = 0;
+  for (const field of fields) {
+    const hasAnswer = Boolean(field.value.trim());
+    field.parentElement.classList.toggle('filled', hasAnswer);
+    if (hasAnswer) filled++;
+  }
+  progress.textContent = filled === fields.length
+    ? 'A–Z complete! 26 of 26 letters filled.'
+    : filled + ' of ' + fields.length + ' letters filled';
+}
+
+for (const letter of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
+  const label = document.createElement('label');
+  const initial = document.createElement('span');
+  initial.textContent = letter;
+  const field = document.createElement('input');
+  field.setAttribute('aria-label', 'Answer for ' + letter);
+  field.autocomplete = 'off';
+  field.addEventListener('input', () => {
+    reply.hidden = true;
+    updateProgress();
+  });
+  label.append(initial, field);
+  board.append(label);
+  fields.push(field);
+}
+updateProgress();
+
+document.getElementById('clear').onclick = () => {
+  if (!fields.some(field => field.value.trim()) || !confirm('Clear all answers?')) return;
+  for (const field of fields) field.value = '';
+  reply.hidden = true;
+  updateProgress();
+  fields[0].focus();
+};
+
+const full = document.getElementById('full');
+full.onclick = async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else await document.documentElement.requestFullscreen();
+  } catch {
+    full.textContent = 'Use browser full screen (F11)';
+  }
+};
+document.addEventListener('fullscreenchange', () => {
+  full.textContent = document.fullscreenElement ? 'Exit full screen' : 'Full screen';
+});
+</script>
+</html>
